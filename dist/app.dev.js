@@ -22,10 +22,13 @@ mongoose.connect(dbURI, {
   return console.log(err);
 }); // register view engine (for dynamic html templates)
 
-app.set("view engine", "ejs"); // listen for requests
-// middleware & static files
+app.set("view engine", "ejs"); // middleware & static files
 
-app.use(express["static"]("public"));
+app.use(express["static"]("public")); // for post request object access (i.e. req.body)
+
+app.use(express.urlencoded({
+  extended: true
+}));
 app.use(morgan("dev")); // routes
 
 app.get("/", function (req, res) {
@@ -48,6 +51,28 @@ app.get("/blogs", function (req, res) {
     res.render("index", {
       title: "All Blogs",
       blogs: result
+    });
+  })["catch"](console.log);
+});
+app.post("/blogs", function (req, res) {
+  var blog = new Blog(req.body);
+  blog.save().then(function (result) {
+    console.log("saved blog: ", result);
+    res.redirect("/blogs");
+  })["catch"](console.log);
+});
+app.get("/blogs/:id", function (req, res) {
+  Blog.findById(req.params.id).then(function (result) {
+    res.render("details", {
+      title: "Blog Details",
+      blog: result
+    });
+  })["catch"](console.log);
+});
+app["delete"]("/blogs/:id", function (req, res) {
+  Blog.findByIdAndDelete(req.params.id).then(function (result) {
+    return res.json({
+      redirect: "/blogs"
     });
   })["catch"](console.log);
 });

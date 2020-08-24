@@ -15,10 +15,10 @@ mongoose
 // register view engine (for dynamic html templates)
 app.set("view engine", "ejs")
 
-// listen for requests
-
 // middleware & static files
 app.use(express.static("public"))
+// for post request object access (i.e. req.body)
+app.use(express.urlencoded({ extended: true }))
 app.use(morgan("dev"))
 
 // routes
@@ -42,6 +42,31 @@ app.get("/blogs", (req, res) => {
     .then(result => {
       res.render("index", { title: "All Blogs", blogs: result })
     })
+    .catch(console.log)
+})
+
+app.post("/blogs", (req, res) => {
+  const blog = new Blog(req.body)
+  blog
+    .save()
+    .then(result => {
+      console.log("saved blog: ", result)
+      res.redirect("/blogs")
+    })
+    .catch(console.log)
+})
+
+app.get("/blogs/:id", (req, res) => {
+  Blog.findById(req.params.id)
+    .then(result => {
+      res.render("details", { title: "Blog Details", blog: result })
+    })
+    .catch(console.log)
+})
+
+app.delete("/blogs/:id", (req, res) => {
+  Blog.findByIdAndDelete(req.params.id)
+    .then(result => res.json({ redirect: "/blogs" }))
     .catch(console.log)
 })
 
