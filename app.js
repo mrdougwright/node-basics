@@ -2,7 +2,7 @@ const express = require("express")
 const morgan = require("morgan")
 const mongoose = require("mongoose")
 const { dbURI } = require("./private/keys")
-const Blog = require("./models/blog")
+const blogRoutes = require("./routes/blogRoutes")
 
 const app = express()
 
@@ -30,49 +30,12 @@ app.get("/about", (req, res) => {
   res.render("about", { title: "About" })
 })
 
-// redirects
 app.get("/about-us", (req, res) => {
   res.redirect("/about")
 })
 
 // blog routes
-app.get("/blogs", (req, res) => {
-  Blog.find()
-    .sort({ createdAt: -1 })
-    .then(result => {
-      res.render("index", { title: "All Blogs", blogs: result })
-    })
-    .catch(console.log)
-})
-
-app.post("/blogs", (req, res) => {
-  const blog = new Blog(req.body)
-  blog
-    .save()
-    .then(result => {
-      console.log("saved blog: ", result)
-      res.redirect("/blogs")
-    })
-    .catch(console.log)
-})
-
-app.get("/blogs/:id", (req, res) => {
-  Blog.findById(req.params.id)
-    .then(result => {
-      res.render("details", { title: "Blog Details", blog: result })
-    })
-    .catch(console.log)
-})
-
-app.delete("/blogs/:id", (req, res) => {
-  Blog.findByIdAndDelete(req.params.id)
-    .then(result => res.json({ redirect: "/blogs" }))
-    .catch(console.log)
-})
-
-app.get("/blogs/create", (req, res) => {
-  res.render("create", { title: "Create a blog" })
-})
+app.use("/blogs", blogRoutes)
 
 // 404
 // app.use fired for every request, IF it gets here after not matching above
