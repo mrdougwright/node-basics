@@ -1,20 +1,29 @@
 const express = require("express")
+const morgan = require("morgan")
+const mongoose = require("mongoose")
+const { dbURI } = require("./private/keys")
+const Blog = require("./models/blog")
 
 const app = express()
+
+// connect to mongodb, with mongoose
+mongoose
+  .connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(result => app.listen(3030))
+  .catch(err => console.log(err))
 
 // register view engine (for dynamic html templates)
 app.set("view engine", "ejs")
 
 // listen for requests
-app.listen(3030)
 
+// middleware & static files
+app.use(express.static("public"))
+app.use(morgan("dev"))
+
+// routes
 app.get("/", (req, res) => {
-  const blogs = [
-    { title: "Yoshi", snippet: "Some text" },
-    { title: "Mario", snippet: "Some more text" },
-    { title: "Bowser", snippet: "Some more more text" },
-  ]
-  res.render("index", { title: "Index", blogs })
+  res.redirect("/blogs")
 })
 
 app.get("/about", (req, res) => {
@@ -24,6 +33,16 @@ app.get("/about", (req, res) => {
 // redirects
 app.get("/about-us", (req, res) => {
   res.redirect("/about")
+})
+
+// blog routes
+app.get("/blogs", (req, res) => {
+  Blog.find()
+    .sort({ createdAt: -1 })
+    .then(result => {
+      res.render("index", { title: "All Blogs", blogs: result })
+    })
+    .catch(console.log)
 })
 
 app.get("/blogs/create", (req, res) => {
